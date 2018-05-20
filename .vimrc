@@ -24,8 +24,8 @@ Plugin 'vim-airline/vim-airline-themes'
 " ----- Vim as a programmer's text editor -----------------------------
 Plugin 'scrooloose/nerdtree'
 Plugin 'jistr/vim-nerdtree-tabs'
-Plugin 'vim-syntastic/syntastic'
-"Plugin 'xolox/vim-misc'
+"Plugin 'vim-syntastic/syntastic'
+Plugin 'xolox/vim-misc'
 "Plugin 'xolox/vim-easytags'
 Plugin 'majutsushi/tagbar'
 "Plugin 'ctrlpvim/ctrlp.vim'
@@ -38,6 +38,7 @@ Plugin 'octol/vim-cpp-enhanced-highlight'
 Plugin 'Valloric/YouCompleteMe'
 Plugin 'Yggdroot/LeaderF'
 Plugin 'scrooloose/nerdcommenter'
+Plugin 'xolox/vim-session'
 
 " ----- Working with Git ----------------------------------------------
 Plugin 'airblade/vim-gitgutter'
@@ -163,10 +164,43 @@ inoremap <C-j> <Down>
 inoremap <C-k> <Up>
 inoremap <C-l> <Right>
 
-" ----- 环境恢复 -----
-" 设置环境保存项
-set sessionoptions="blank,globals,localoptions,tabpages,sesdir,folds,help,options,resize,winpos,winsize"
+" ----- session settings ----
+let g:session_autoload='no'
+let g:session_autosave='no'
+let g:session_directory="./"
+let g:ProjectSessionFile=""
 
+fu! SaveSess()
+    set sessionoptions-=curdir
+    set sessionoptions+=sesdir
+    set sessionoptions+=slash
+    set sessionoptions+=unix
+    set sessionoptions-=options
+    execute 'mksession! '.g:ProjectSessionFile
+    echo "Save session done!"
+endfunction
+
+fu! RestoreSess()
+    execute 'source '.g:ProjectSessionFile
+    echo "Restore session done!"
+endfunction
+
+function! LoadProject()
+    let session_file = "./session.vim"
+    let g:ProjectSessionFile=session_file
+    if filereadable(session_file)
+        call RestoreSess()
+    else
+        call SaveSess()
+    endif
+
+    autocmd VimLeave * call SaveSess()
+
+    echo "Load Project Done!"
+endfunction
+
+"au BufEnter /* call LoadProject()
+nmap <silent> <leader>lp :call LoadProject()<cr>
 
 " ----- Plugin-Specific Settings --------------------------------------
 
@@ -206,6 +240,7 @@ let g:airline_theme='solarized'
 nmap <silent> <leader>fl :NERDTreeTabsToggle<CR>
 " To have NERDTree always open on startup
 let g:nerdtree_tabs_open_on_console_startup = 1
+let g:nerdtree_tabs_autofind = 1
 " 设置 NERDTree 子窗口宽度
 let NERDTreeWinSize=32
 " 设置 NERDTree 子窗口位置
@@ -218,12 +253,14 @@ let NERDTreeMinimalUI=1
 let NERDTreeAutoDeleteBuffer=1
 
 " ----- scrooloose/syntastic settings -----
-let g:syntastic_error_symbol = '✘'
-let g:syntastic_warning_symbol = "▲"
-augroup mySyntastic
-  au!
-  au FileType tex let b:syntastic_mode = "passive"
-augroup END
+"let g:syntastic_error_symbol = '✘'
+"let g:syntastic_warning_symbol = "▲"
+"" 是否在打开文件时检查
+"let g:syntastic_check_on_open=0
+""augroup mySyntastic
+""  au!
+"  au FileType tex let b:syntastic_mode = "passive"
+"augroup END
 
 
 " ----- xolox/vim-easytags settings -----
@@ -315,6 +352,9 @@ let g:ycm_min_num_of_chars_for_completion = 3
 " YCM的previw窗口比较恼人，还是关闭比较好 
 set completeopt-=preview
 let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp/ycm/.ycm_extra_conf.py'
+" close the syntax error warnings
+let g:ycm_enable_diagnostic_signs = 0
+let g:ycm_enable_diagnostic_highlighting = 0
 
 " ----- cscope settings -----
 if has("cscope")
@@ -347,3 +387,6 @@ endif
 " ----- vm-fswitch settings -----
 " *.cpp 和 *.h 间切换
 "nmap <silent> <Leader>sw :FSHere<cr>
+
+" ----- Leaderf settings -----
+map <C-p> :LeaderfFile<CR>
